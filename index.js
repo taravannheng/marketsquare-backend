@@ -8,6 +8,7 @@ const productRoutes = require('./routes/products/products.route');
 const relatedProductRoutes = require('./routes/products/related-products.route');
 const checkoutRoutes = require('./routes/checkout/checkout.route');
 const orderRoutes = require('./routes/order/order.route');
+const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middleware/logging/logging.middleware');
 
@@ -33,6 +34,7 @@ app.use('/api', productRoutes);
 app.use('/api', relatedProductRoutes);
 app.use('/api', checkoutRoutes);
 app.use('/api', orderRoutes);
+app.use('/api', slideshowRoutes);
 app.use(notFoundRoute);
 
 const port = process.env.PORT || 3001;
