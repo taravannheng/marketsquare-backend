@@ -1,0 +1,21 @@
+name: autopr from release into dev
+on:
+  push:
+    branches:
+      - 'release/*'
+jobs:
+  createPullRequest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: ${{ github.event.head_commit.message }}
+          commit-message: ${{ github.event.head_commit.message }}
+          reviewers: taravannheng
+          branch: ${{ github.event.ref }}
+          base: dev
+          delete-branch: true
+          labels: 'auto-generated, pull request'
+          token: ${{ secrets.GITHUB_TOKEN }}
