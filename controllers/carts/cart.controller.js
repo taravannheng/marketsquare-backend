@@ -64,7 +64,7 @@ const createCart = async (req, res) => {
     });
 
     // send cart data to db
-    const productsInCart = products.map(({ stripeID, quantity }) => ({ stripeID, quantity }));
+    const productsInCart = products.map(({ stripeID, quantity, _id }) => ({ stripeID, quantity, _id }));
     const cartData = {
       cartID: cartID,
       stripeSessionID: session.id,
