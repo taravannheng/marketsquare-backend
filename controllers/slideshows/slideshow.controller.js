@@ -77,11 +77,11 @@ const getSlideshows = async (req, res) => {
 };
 
 const updateSlideshow = async (req, res) => {
-  const id = req.params.id;
+  const slideshowID = req.params.slideshowID;
   const slideshow = req.body;
 
   try {
-    const result = await SlideshowModel.updateOne({ _id: id }, { $set: slideshow });
+    const result = await SlideshowModel.updateOne({ _id: slideshowID }, { $set: slideshow });
     if (result.modifiedCount === 1) {
       res.status(200).json({ message: 'Document updated successfully' });
     } else {
@@ -95,10 +95,10 @@ const updateSlideshow = async (req, res) => {
 };
 
 const deleteSlideshow = async (req, res) => {
-  const id = req.params.id;
+  const slideshowID = req.params.slideshowID;
 
   try {
-    const result = await SlideshowModel.deleteOne({ _id: id });
+    const result = await SlideshowModel.deleteOne({ _id: slideshowID });
 
     if (result.deletedCount === 1) {
       res.status(200).json({ message: 'Document deleted successfully' });
