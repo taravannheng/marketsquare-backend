@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 
 const productRoutes = require('./routes/products/products.route');
 const relatedProductRoutes = require('./routes/products/related-products.route');
-const checkoutRoutes = require('./routes/checkout/checkout.route');
+const cartRoutes = require('./routes/carts/cart.route');
 const orderRoutes = require('./routes/order/order.route');
 const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
@@ -32,7 +32,7 @@ connectDB();
 
 app.use('/api', productRoutes);
 app.use('/api', relatedProductRoutes);
-app.use('/api', checkoutRoutes);
+app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', slideshowRoutes);
 app.use(notFoundRoute);
