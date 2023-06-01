@@ -60,7 +60,7 @@ const createCart = async (req, res) => {
       line_items: extractedProducts,
       mode: 'payment',
       success_url: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/confirmation?success=true&cartID=${cartID}`,
-      cancel_url: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/confirmation?canceled=true&cartID=${cartID}`,
+      cancel_url: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?canceled=true&cartID=${cartID}`,
     });
 
     // send cart data to db
