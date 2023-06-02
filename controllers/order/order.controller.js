@@ -4,6 +4,7 @@ const _ = require('lodash');
 const CartModel = require('../../models/cart/cart.model');
 const OrderModel = require('../../models/order/order.model');
 const ProductModel = require('../../models/products/products.model');
+const { generateOrderID } = require('../../utils/helpers');
 
 const createOrder = async (req, res) => {
   try {
@@ -118,8 +119,7 @@ const createOrder = async (req, res) => {
       const address = paymentIntent.payment_method.billing_details.address;
       const cardBrand = paymentIntent.payment_method.card.brand;
       const cardLast4 = paymentIntent.payment_method.card.last4;
-      const nanoid = (await import('nanoid')).nanoid;
-      const orderID = nanoid();
+      const orderID = await generateOrderID();
 
       const orderDataFrontend = {
         orderID: orderID,

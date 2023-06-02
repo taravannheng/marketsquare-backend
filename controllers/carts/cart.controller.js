@@ -2,13 +2,13 @@ const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 const _ = require('lodash');
 
 const CartModel = require('../../models/cart/cart.model');
+const { generateCartID } = require('../../utils/helpers');
 
 const createCart = async (req, res) => {
   try {
     const products = req.body.products;
     const extractedProducts = products.map(({ stripeID, quantity }) => ({ price: stripeID, quantity }));
-    const nanoid = (await import('nanoid')).nanoid;
-    const cartID = nanoid();
+    const cartID = await generateCartID();
 
     // create checkout session
     const session = await stripe.checkout.sessions.create({
