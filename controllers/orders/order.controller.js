@@ -1,14 +1,15 @@
-const stripe = require('stripe')(process.env.STRIPE_API_KEY);
-const _ = require('lodash');
+const stripe = require("stripe")(process.env.STRIPE_API_KEY);
+const _ = require("lodash");
 
-const CartModel = require('../../models/cart/cart.model');
-const OrderModel = require('../../models/order/order.model');
-const ProductModel = require('../../models/products/products.model');
-const { generateOrderID } = require('../../utils/helpers');
+const CartModel = require("../../models/cart/cart.model");
+const OrderModel = require("../../models/order/order.model");
+const ProductModel = require("../../models/products/products.model");
+const { generateOrderID } = require("../../utils/helpers");
 
 const createOrder = async (req, res) => {
   try {
-    const cartID = req.params.cartID;
+    const { cartID } = req.query;
+    console.warn(cartID);
 
     // get order if already exists
     const existingOrder = await OrderModel.find({ cartID: cartID });
@@ -63,7 +64,7 @@ const createOrder = async (req, res) => {
           cardBrand: existingOrder[0].payment.cardBrand,
           cardLast4: existingOrder[0].payment.cardLast4,
         },
-        products: updatedProducts
+        products: updatedProducts,
       };
       res.json({ order: orderDataFrontend });
     }
@@ -107,7 +108,7 @@ const createOrder = async (req, res) => {
       const paymentIntent = await stripe.paymentIntents.retrieve(
         paymentIntentID,
         {
-          expand: ['payment_method'],
+          expand: ["payment_method"],
         }
       );
 
@@ -158,8 +159,107 @@ const createOrder = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-module.exports = { createOrder };
+const getMultipleOrders = async (req, res) => {
+  try {
+    const { ids } = req.query;
+    const orderIDs = ids.split(",");
+    const orders = await OrderModel.find({ orderID: { $in: orderIDs } });
+
+    if (_.isEmpty(orders)) {
+      res.status(204).json({ message: "No orders found..." });
+    }
+
+    if (!_.isEmpty(orders)) {
+      res.status(200).json(orders);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const getOrders = async (req, res) => {
+  try {
+    const orders = await OrderModel.find();
+
+    if (_.isEmpty(orders)) {
+      res.status(204).json({ message: "No orders found" });
+    }
+
+    if (!_.isEmpty(orders)) {
+      res.status(200).json(orders);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const getOrder = async (req, res) => {
+  try {
+    const orderID = req.params.orderID;
+    const order = await OrderModel.find({ orderID: orderID });
+
+    if (_.isEmpty(order)) {
+      res.status(204).json({ message: "No order found..." });
+    }
+
+    if (!_.isEmpty(order)) {
+      res.status(200).json(order);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+const updateOrder = async (req, res) => {
+  const orderID = req.params.orderID;
+  const order = req.body;
+
+  try {
+    const result = await OrderModel.updateOne(
+      { orderID: orderID },
+      { $set: order }
+    );
+    if (result.modifiedCount === 1) {
+      res.status(200).json({ message: "Order updated successfully" });
+    } else {
+      console.error(result);
+      res.status(404).json({ message: "Order not found or no changes made" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating order" });
+  }
+};
+
+const deleteOrder = async (req, res) => {
+  const orderID = req.params.orderID;
+
+  try {
+    const result = await OrderModel.deleteOne({ orderID: orderID });
+
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: "Order deleted successfully" });
+    } else {
+      console.error(result);
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting order" });
+  }
+};
+
+module.exports = {
+  createOrder,
+  getOrder,
+  getMultipleOrders,
+  getOrders,
+  updateOrder,
+  deleteOrder,
+};

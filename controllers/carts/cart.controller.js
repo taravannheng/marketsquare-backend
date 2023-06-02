@@ -1,36 +1,39 @@
-const stripe = require('stripe')(process.env.STRIPE_API_KEY);
-const _ = require('lodash');
+const stripe = require("stripe")(process.env.STRIPE_API_KEY);
+const _ = require("lodash");
 
-const CartModel = require('../../models/cart/cart.model');
-const { generateCartID } = require('../../utils/helpers');
+const CartModel = require("../../models/cart/cart.model");
+const { generateCartID } = require("../../utils/helpers");
 
 const createCart = async (req, res) => {
   try {
     const products = req.body.products;
-    const extractedProducts = products.map(({ stripeID, quantity }) => ({ price: stripeID, quantity }));
+    const extractedProducts = products.map(({ stripeID, quantity }) => ({
+      price: stripeID,
+      quantity,
+    }));
     const cartID = await generateCartID();
 
     // create checkout session
     const session = await stripe.checkout.sessions.create({
       shipping_address_collection: {
-        allowed_countries: ['AU'],
+        allowed_countries: ["AU"],
       },
       shipping_options: [
         {
           shipping_rate_data: {
-            type: 'fixed_amount',
+            type: "fixed_amount",
             fixed_amount: {
               amount: 0,
-              currency: 'aud',
+              currency: "aud",
             },
-            display_name: 'Free shipping',
+            display_name: "Free shipping",
             delivery_estimate: {
               minimum: {
-                unit: 'business_day',
+                unit: "business_day",
                 value: 5,
               },
               maximum: {
-                unit: 'business_day',
+                unit: "business_day",
                 value: 7,
               },
             },
@@ -38,19 +41,19 @@ const createCart = async (req, res) => {
         },
         {
           shipping_rate_data: {
-            type: 'fixed_amount',
+            type: "fixed_amount",
             fixed_amount: {
               amount: 1500,
-              currency: 'aud',
+              currency: "aud",
             },
-            display_name: 'Next day air',
+            display_name: "Next day air",
             delivery_estimate: {
               minimum: {
-                unit: 'business_day',
+                unit: "business_day",
                 value: 1,
               },
               maximum: {
-                unit: 'business_day',
+                unit: "business_day",
                 value: 1,
               },
             },
@@ -58,13 +61,17 @@ const createCart = async (req, res) => {
         },
       ],
       line_items: extractedProducts,
-      mode: 'payment',
+      mode: "payment",
       success_url: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/confirmation?success=true&cartID=${cartID}`,
       cancel_url: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?canceled=true&cartID=${cartID}`,
     });
 
     // send cart data to db
-    const productsInCart = products.map(({ stripeID, quantity, _id }) => ({ stripeID, quantity, _id }));
+    const productsInCart = products.map(({ stripeID, quantity, _id }) => ({
+      stripeID,
+      quantity,
+      _id,
+    }));
     const cartData = {
       cartID: cartID,
       stripeSessionID: session.id,
@@ -74,10 +81,10 @@ const createCart = async (req, res) => {
     const cart = new CartModel(cartData);
     cart.save();
 
-    res.status(200).json({url: session.url});
-  } catch(error) {
+    res.status(200).json({ url: session.url });
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -87,34 +94,34 @@ const getCart = async (req, res) => {
     const cart = await CartModel.find({ cartID: cartID });
 
     if (_.isEmpty(cart)) {
-      res.status(204).json({ message: 'No cart found...' });
+      res.status(204).json({ message: "No cart found..." });
     }
 
     if (!_.isEmpty(cart)) {
       res.status(200).json(cart);
     }
-  } catch(error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 const getMultipleCarts = async (req, res) => {
   try {
     const { ids } = req.query;
-    const cartIDs = ids.split(',');
+    const cartIDs = ids.split(",");
     const carts = await CartModel.find({ cartID: { $in: cartIDs } });
 
     if (_.isEmpty(carts)) {
-      res.status(204).json({ message: 'No carts found...' });
+      res.status(204).json({ message: "No carts found..." });
     }
 
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
-  } catch(error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -123,15 +130,15 @@ const getCarts = async (req, res) => {
     const carts = await CartModel.find();
 
     if (_.isEmpty(carts)) {
-      res.status(204).json({ message: 'No carts found' });
+      res.status(204).json({ message: "No carts found" });
     }
 
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
-  } catch(error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -140,16 +147,21 @@ const updateCart = async (req, res) => {
   const carts = req.body;
 
   try {
-    const result = await CartModel.updateOne({ cartID: cartID }, { $set: carts });
+    const result = await CartModel.updateOne(
+      { cartID: cartID },
+      { $set: carts }
+    );
     if (result.modifiedCount === 1) {
-      res.status(200).json({ message: 'Document updated successfully' });
+      res.status(200).json({ message: "Document updated successfully" });
     } else {
       console.error(result);
-      res.status(404).json({ message: 'Document not found or no changes made' });
+      res
+        .status(404)
+        .json({ message: "Document not found or no changes made" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error updating document' });
+    res.status(500).json({ message: "Error updating document" });
   }
 };
 
@@ -160,15 +172,22 @@ const deleteCart = async (req, res) => {
     const result = await CartModel.deleteOne({ cartID: cartID });
 
     if (result.deletedCount === 1) {
-      res.status(200).json({ message: 'Document deleted successfully' });
+      res.status(200).json({ message: "Document deleted successfully" });
     } else {
       console.error(result);
-      res.status(404).json({ message: 'Document not found' });
+      res.status(404).json({ message: "Document not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error deleting document' });
+    res.status(500).json({ message: "Error deleting document" });
   }
 };
 
-module.exports = { createCart, getCart, getMultipleCarts, getCarts, updateCart, deleteCart };
+module.exports = {
+  createCart,
+  getCart,
+  getMultipleCarts,
+  getCarts,
+  updateCart,
+  deleteCart,
+};
