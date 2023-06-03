@@ -1,10 +1,13 @@
 const stripe = require("stripe")(process.env.STRIPE_API_KEY);
 const _ = require("lodash");
+const redis = require("redis");
 
 const CartModel = require("../../models/cart/cart.model");
 const OrderModel = require("../../models/order/order.model");
 const ProductModel = require("../../models/products/products.model");
-const { generateOrderID } = require("../../utils/helpers");
+const { getFirstThreeChars, generateOrderID } = require("../../utils/helpers");
+
+const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
 
 const createOrder = async (req, res) => {
   try {
@@ -167,7 +170,30 @@ const getMultipleOrders = async (req, res) => {
   try {
     const { ids } = req.query;
     const orderIDs = ids.split(",");
-    const orders = await OrderModel.find({ orderID: { $in: orderIDs } });
+    const cacheKey = `orders-${getFirstThreeChars(orderIDs)}`;
+    let orders;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      orders = await OrderModel.find({ orderID: { $in: orderIDs }});
+
+      // set redis cache
+      if (!_.isEmpty(orders)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(orders)
+        );
+      }
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set orders to redisData
+      orders = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(orders)) {
       res.status(204).json({ message: "No orders found..." });
@@ -176,6 +202,8 @@ const getMultipleOrders = async (req, res) => {
     if (!_.isEmpty(orders)) {
       res.status(200).json(orders);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -184,15 +212,40 @@ const getMultipleOrders = async (req, res) => {
 
 const getOrders = async (req, res) => {
   try {
-    const orders = await OrderModel.find();
+    const cacheKey = 'orders';
+    let orders;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      orders = await OrderModel.find();
+
+      // set redis cache
+      if (!_.isEmpty(orders)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(orders)
+        );
+      }
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set orders to redisData
+      orders = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(orders)) {
-      res.status(204).json({ message: "No orders found" });
+      res.status(204).json({ message: "No orders found..." });
     }
 
     if (!_.isEmpty(orders)) {
       res.status(200).json(orders);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -202,7 +255,30 @@ const getOrders = async (req, res) => {
 const getOrder = async (req, res) => {
   try {
     const orderID = req.params.orderID;
-    const order = await OrderModel.find({ orderID: orderID });
+    const cacheKey = `${orderID}`;
+    let order;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      order = await OrderModel.find({ orderID: orderID });
+
+      // set redis cache
+      if (!_.isEmpty(order)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(order)
+        );
+      }
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set order to redisData
+      order = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(order)) {
       res.status(204).json({ message: "No order found..." });
@@ -211,6 +287,8 @@ const getOrder = async (req, res) => {
     if (!_.isEmpty(order)) {
       res.status(200).json(order);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
