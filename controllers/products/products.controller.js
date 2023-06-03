@@ -84,7 +84,7 @@ const getMultipleProducts = async (req, res) => {
     }
 
     if (!_.isEmpty(redisData)) {
-      // set slideshows to redisData
+      // set products to redisData
       products = JSON.parse(redisData);
     }
 
