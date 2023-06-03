@@ -1,11 +1,9 @@
 const stripe = require("stripe")(process.env.STRIPE_API_KEY);
 const _ = require("lodash");
-const redis = require("redis");
 
 const CartModel = require("../../models/cart/cart.model");
 const { generateCartID, getFirstThreeChars } = require("../../utils/helpers");
-
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const { redisClient } = require('../../redisClient');
 
 const createCart = async (req, res) => {
   try {
@@ -97,7 +95,6 @@ const getCart = async (req, res) => {
     const cacheKey = `${cartID}`;
     let cart;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -126,8 +123,6 @@ const getCart = async (req, res) => {
     if (!_.isEmpty(cart)) {
       res.status(200).json(cart);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -141,7 +136,6 @@ const getMultipleCarts = async (req, res) => {
     const cacheKey = `carts-${getFirstThreeChars(cartIDs)}`;
     let carts;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -170,8 +164,6 @@ const getMultipleCarts = async (req, res) => {
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -183,7 +175,6 @@ const getCarts = async (req, res) => {
     const cacheKey = 'carts';
     let carts;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -212,8 +203,6 @@ const getCarts = async (req, res) => {
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

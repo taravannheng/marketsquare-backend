@@ -1,10 +1,8 @@
 const _ = require("lodash");
-const redis = require("redis");
 
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars } = require('../../utils/helpers');
-
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const { redisClient } = require('../../redisClient');
 
 const createProduct = async (req, res) => {
   try {
@@ -26,7 +24,6 @@ const getProduct = async (req, res) => {
     const cacheKey = `${productID}`;
     let product;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -55,8 +52,6 @@ const getProduct = async (req, res) => {
     if (!_.isEmpty(product)) {
       res.status(200).json(product);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -70,7 +65,6 @@ const getMultipleProducts = async (req, res) => {
     const cacheKey = `products-${getFirstThreeChars(productIDs)}`;
     let products;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -99,8 +93,6 @@ const getMultipleProducts = async (req, res) => {
     if (!_.isEmpty(products)) {
       res.status(200).json(products);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -112,7 +104,6 @@ const getProducts = async (req, res) => {
     const cacheKey = 'products';
     let products;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -141,8 +132,6 @@ const getProducts = async (req, res) => {
     if (!_.isEmpty(products)) {
       res.status(200).json(products);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
