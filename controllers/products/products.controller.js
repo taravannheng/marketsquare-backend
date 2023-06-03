@@ -2,6 +2,7 @@ const _ = require("lodash");
 const redis = require("redis");
 
 const ProductModel = require("../../models/products/products.model");
+const { getFirstThreeChars } = require('../../utils/helpers');
 
 const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
 
@@ -64,7 +65,28 @@ const getMultipleProducts = async (req, res) => {
   try {
     const { ids } = req.query;
     const productIDs = ids.split(",");
-    const products = await ProductModel.find({ _id: { $in: productIDs } });
+    const cacheKey = `products-${getFirstThreeChars(productIDs)}`;
+    let products;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      products = await ProductModel.find({ _id: { $in: productIDs }});
+
+      // set redis cache
+      redisClient.setEx(
+        cacheKey,
+        3600,
+        JSON.stringify(products)
+      );
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set slideshows to redisData
+      products = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(products)) {
       res.status(204).json({ message: "No products found..." });
@@ -73,6 +95,8 @@ const getMultipleProducts = async (req, res) => {
     if (!_.isEmpty(products)) {
       res.status(200).json(products);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
