@@ -1,13 +1,9 @@
 const _ = require('lodash');
-const redis = require("redis");
 const mongoose = require('mongoose');
 
 const SlideshowModel = require('../../models/slideshows/slideshow.model');
 const { getFirstThreeChars } = require('../../utils/helpers');
-
-const redisClient = redis.createClient({
-  url: process.env.REDIS_CONNECTION_STRING
-});
+const { redisClient } = require('../../redisClient');
 
 const createSlideshow = async (req, res) => {
   try {
@@ -34,7 +30,6 @@ const getSlideshow = async (req, res) => {
     const cacheKey = `${slideshowID}`;
     let slideshow;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -63,8 +58,6 @@ const getSlideshow = async (req, res) => {
     if (!_.isEmpty(slideshow)) {
       res.status(200).json(slideshow[0]);
     }
-
-    redisClient.quit();
   } catch(error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -78,7 +71,6 @@ const getMultipleSlideshows = async (req, res) => {
     const cacheKey = `slideshows-${getFirstThreeChars(slideshowIDs)}`;
     let slideshows;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -107,8 +99,6 @@ const getMultipleSlideshows = async (req, res) => {
     if (!_.isEmpty(slideshows)) {
       res.status(200).json(slideshows);
     }
-
-    redisClient.quit();
   } catch(error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -120,7 +110,6 @@ const getSlideshows = async (req, res) => {
     const cacheKey = 'slideshows';
     let slideshows;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -149,8 +138,6 @@ const getSlideshows = async (req, res) => {
     if (!_.isEmpty(slideshows)) {
       res.status(200).json(slideshows);
     }
-
-    redisClient.quit();
   } catch(error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });

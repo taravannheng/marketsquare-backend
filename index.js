@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orders/order.route');
 const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middleware/logging/logging.middleware');
+const { connectToRedis } = require('./redisClient');
 
 const app = express();
 
@@ -29,6 +30,9 @@ app.use(bodyParser.json());
 
 // connect to mongodb
 connectDB();
+
+// connect to redis
+connectToRedis();
 
 app.use('/api', productRoutes);
 app.use('/api', relatedProductRoutes);

@@ -1,11 +1,7 @@
 const _ = require('lodash');
-const redis = require("redis");
 
 const RelatedProductModel = require('../../models/products/related-products.model');
-
-const redisClient = redis.createClient({
-  url: process.env.REDIS_CONNECTION_STRING
-});
+const { redisClient } = require('../../redisClient');
 
 const getRelatedProducts = async (req, res) => {
   try {
@@ -13,7 +9,6 @@ const getRelatedProducts = async (req, res) => {
     const productID = req.params.productID;
     const cacheKey = `related-${productID}`;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -42,8 +37,6 @@ const getRelatedProducts = async (req, res) => {
     if (!_.isEmpty(relatedProducts)) {
       res.status(200).json(relatedProducts);
     }
-
-    redisClient.quit();
   } catch(error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
