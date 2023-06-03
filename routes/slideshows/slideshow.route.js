@@ -6,7 +6,7 @@ router.get('/slideshows', getSlideshows);
 router.get('/slideshows/batch', getMultipleSlideshows);
 router.get('/slideshows/:slideshowID', getSlideshow);
 router.post('/slideshows', createSlideshow);
-router.put('/slideshows/:id', updateSlideshow);
-router.delete('/slideshows/:id', deleteSlideshow);
+router.put('/slideshows/:slideshowID', updateSlideshow);
+router.delete('/slideshows/:slideshowID', deleteSlideshow);
 
 module.exports = router;
