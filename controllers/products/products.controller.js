@@ -34,11 +34,13 @@ const getProduct = async (req, res) => {
       product = await ProductModel.find({ _id: productID });
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(product)
-      );
+      if (!_.isEmpty(product)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(product)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -76,11 +78,13 @@ const getMultipleProducts = async (req, res) => {
       products = await ProductModel.find({ _id: { $in: productIDs }});
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(products)
-      );
+      if (!_.isEmpty(products)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(products)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -116,11 +120,13 @@ const getProducts = async (req, res) => {
       products = await ProductModel.find();
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(products)
-      );
+      if (!_.isEmpty(products)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(products)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {

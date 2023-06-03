@@ -40,11 +40,13 @@ const getSlideshow = async (req, res) => {
       slideshow = await SlideshowModel.find({ _id: slideshowID });
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(slideshow)
-      );
+      if (!_.isEmpty(slideshow)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(slideshow)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -82,11 +84,13 @@ const getMultipleSlideshows = async (req, res) => {
       slideshows = await SlideshowModel.find({ _id: { $in: slideshowIDs }});
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(slideshows)
-      );
+      if (!_.isEmpty(slideshows)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(slideshows)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -122,11 +126,13 @@ const getSlideshows = async (req, res) => {
       slideshows = await SlideshowModel.find();
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(slideshows)
-      );
+      if (!_.isEmpty(slideshows)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(slideshows)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -155,6 +161,7 @@ const updateSlideshow = async (req, res) => {
 
   try {
     const result = await SlideshowModel.updateOne({ _id: slideshowID }, { $set: slideshow });
+    
     if (result.modifiedCount === 1) {
       res.status(200).json({ message: 'Document updated successfully' });
     } else {

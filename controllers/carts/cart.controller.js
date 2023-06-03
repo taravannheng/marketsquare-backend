@@ -105,11 +105,13 @@ const getCart = async (req, res) => {
       cart = await CartModel.find({ cartID: cartID });
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(cart)
-      );
+      if (!_.isEmpty(cart)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(cart)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -147,11 +149,13 @@ const getMultipleCarts = async (req, res) => {
       carts = await CartModel.find({ cartID: { $in: cartIDs }});
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(carts)
-      );
+      if (!_.isEmpty(carts)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(carts)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
@@ -187,11 +191,13 @@ const getCarts = async (req, res) => {
       carts = await CartModel.find();
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(carts)
-      );
+      if (!_.isEmpty(carts)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(carts)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {

@@ -19,11 +19,13 @@ const getRelatedProducts = async (req, res) => {
       relatedProducts = await RelatedProductModel.find({ products: productID });
 
       // set redis cache
-      redisClient.setEx(
-        cacheKey,
-        3600,
-        JSON.stringify(relatedProducts)
-      );
+      if (!_.isEmpty(relatedProducts)) {
+        redisClient.setEx(
+          cacheKey,
+          3600,
+          JSON.stringify(relatedProducts)
+        );
+      }
     }
 
     if (!_.isEmpty(redisData)) {
