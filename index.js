@@ -6,11 +6,12 @@ const bodyParser = require('body-parser');
 
 const productRoutes = require('./routes/products/products.route');
 const relatedProductRoutes = require('./routes/products/related-products.route');
-const checkoutRoutes = require('./routes/checkout/checkout.route');
-const orderRoutes = require('./routes/order/order.route');
+const cartRoutes = require('./routes/carts/cart.route');
+const orderRoutes = require('./routes/orders/order.route');
 const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middleware/logging/logging.middleware');
+const { connectToRedis } = require('./redisClient');
 
 const app = express();
 
@@ -30,9 +31,12 @@ app.use(bodyParser.json());
 // connect to mongodb
 connectDB();
 
+// connect to redis
+connectToRedis();
+
 app.use('/api', productRoutes);
 app.use('/api', relatedProductRoutes);
-app.use('/api', checkoutRoutes);
+app.use('/api', cartRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', slideshowRoutes);
 app.use(notFoundRoute);

@@ -22,6 +22,10 @@ const cartSchema = new Schema({
       default: 1
     }
   }],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  }
 });
 
 const CartModel = mongoose.model('Cart', cartSchema);
