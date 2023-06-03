@@ -3,7 +3,9 @@ const redis = require("redis");
 
 const RelatedProductModel = require('../../models/products/related-products.model');
 
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const redisClient = redis.createClient({
+  url: process.env.REDIS_CONNECTION_STRING
+});
 
 const getRelatedProducts = async (req, res) => {
   try {

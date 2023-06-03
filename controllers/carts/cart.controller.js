@@ -5,7 +5,9 @@ const redis = require("redis");
 const CartModel = require("../../models/cart/cart.model");
 const { generateCartID, getFirstThreeChars } = require("../../utils/helpers");
 
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const redisClient = redis.createClient({
+  url: process.env.REDIS_CONNECTION_STRING
+});
 
 const createCart = async (req, res) => {
   try {

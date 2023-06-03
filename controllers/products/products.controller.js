@@ -4,7 +4,9 @@ const redis = require("redis");
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars } = require('../../utils/helpers');
 
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const redisClient = redis.createClient({
+  url: process.env.REDIS_CONNECTION_STRING
+});
 
 const createProduct = async (req, res) => {
   try {

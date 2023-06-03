@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const SlideshowModel = require('../../models/slideshows/slideshow.model');
 const { getFirstThreeChars } = require('../../utils/helpers');
 
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const redisClient = redis.createClient({
+  url: process.env.REDIS_CONNECTION_STRING
+});
 
 const createSlideshow = async (req, res) => {
   try {
