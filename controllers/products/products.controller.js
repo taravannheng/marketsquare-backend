@@ -26,8 +26,6 @@ const getProduct = async (req, res) => {
     let product;
 
     await redisClient.connect();
-    
-
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
