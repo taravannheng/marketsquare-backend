@@ -1,8 +1,11 @@
 const stripe = require("stripe")(process.env.STRIPE_API_KEY);
 const _ = require("lodash");
+const redis = require("redis");
 
 const CartModel = require("../../models/cart/cart.model");
-const { generateCartID } = require("../../utils/helpers");
+const { generateCartID, getFirstThreeChars } = require("../../utils/helpers");
+
+const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
 
 const createCart = async (req, res) => {
   try {
@@ -91,7 +94,28 @@ const createCart = async (req, res) => {
 const getCart = async (req, res) => {
   try {
     const cartID = req.params.cartID;
-    const cart = await CartModel.find({ cartID: cartID });
+    const cacheKey = `${cartID}`;
+    let cart;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      cart = await CartModel.find({ cartID: cartID });
+
+      // set redis cache
+      redisClient.setEx(
+        cacheKey,
+        3600,
+        JSON.stringify(cart)
+      );
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set cart to redisData
+      cart = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(cart)) {
       res.status(204).json({ message: "No cart found..." });
@@ -100,6 +124,8 @@ const getCart = async (req, res) => {
     if (!_.isEmpty(cart)) {
       res.status(200).json(cart);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -110,7 +136,28 @@ const getMultipleCarts = async (req, res) => {
   try {
     const { ids } = req.query;
     const cartIDs = ids.split(",");
-    const carts = await CartModel.find({ cartID: { $in: cartIDs } });
+    const cacheKey = `carts-${getFirstThreeChars(cartIDs)}`;
+    let carts;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      carts = await CartModel.find({ cartID: { $in: cartIDs }});
+
+      // set redis cache
+      redisClient.setEx(
+        cacheKey,
+        3600,
+        JSON.stringify(carts)
+      );
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set carts to redisData
+      carts = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(carts)) {
       res.status(204).json({ message: "No carts found..." });
@@ -119,6 +166,8 @@ const getMultipleCarts = async (req, res) => {
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -127,15 +176,38 @@ const getMultipleCarts = async (req, res) => {
 
 const getCarts = async (req, res) => {
   try {
-    const carts = await CartModel.find();
+    const cacheKey = 'carts';
+    let carts;
+
+    await redisClient.connect();
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData)) {
+      // call to db 
+      carts = await CartModel.find();
+
+      // set redis cache
+      redisClient.setEx(
+        cacheKey,
+        3600,
+        JSON.stringify(carts)
+      );
+    }
+
+    if (!_.isEmpty(redisData)) {
+      // set carts to redisData
+      carts = JSON.parse(redisData);
+    }
 
     if (_.isEmpty(carts)) {
-      res.status(204).json({ message: "No carts found" });
+      res.status(204).json({ message: "No carts found..." });
     }
 
     if (!_.isEmpty(carts)) {
       res.status(200).json(carts);
     }
+
+    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
