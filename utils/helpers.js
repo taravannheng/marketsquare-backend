@@ -15,4 +15,9 @@ const generateOrderID = async () => {
   return orderID;
 };
 
-module.exports = { generateOrderID, generateCartID };
+const getFirstThreeChars = (ids) => {
+  const result = ids.map(id => id.slice(0, 3)).join('');
+  return result;
+}
+
+module.exports = { generateOrderID, generateCartID, getFirstThreeChars };
