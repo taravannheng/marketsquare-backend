@@ -2,7 +2,7 @@ const _ = require("lodash");
 
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars } = require('../../utils/helpers');
-const { redisClient } = require('../../redisClient');
+const { redisClient } = require('../../configs/redis-client');
 
 const createProduct = async (req, res) => {
   try {
