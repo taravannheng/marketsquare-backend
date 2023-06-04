@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const CartModel = require("../../models/cart/cart.model");
 const { generateCartID, getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require('../../redisClient');
+const { redisClient } = require('../../configs/redis-client');
 
 const createCart = async (req, res) => {
   try {

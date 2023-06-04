@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const SlideshowModel = require('../../models/slideshows/slideshow.model');
 const { getFirstThreeChars } = require('../../utils/helpers');
-const { redisClient } = require('../../redisClient');
+const { redisClient } = require('../../configs/redis-client');
 
 const createSlideshow = async (req, res) => {
   try {
