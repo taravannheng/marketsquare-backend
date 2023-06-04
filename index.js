@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./db');
 const bodyParser = require('body-parser');
 
+const connectDB = require('./configs/db');
 const productRoutes = require('./routes/products/products.route');
 const relatedProductRoutes = require('./routes/products/related-products.route');
 const cartRoutes = require('./routes/carts/cart.route');
