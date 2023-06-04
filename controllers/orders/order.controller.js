@@ -6,8 +6,7 @@ const CartModel = require("../../models/cart/cart.model");
 const OrderModel = require("../../models/order/order.model");
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars, generateOrderID } = require("../../utils/helpers");
-
-const redisClient = redis.createClient(process.env.REDIS_CONNECTION_STRING);
+const { redisClient } = require('../../configs/redisClient');
 
 const createOrder = async (req, res) => {
   try {
