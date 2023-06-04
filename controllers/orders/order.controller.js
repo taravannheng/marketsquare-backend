@@ -1,12 +1,11 @@
 const stripe = require("stripe")(process.env.STRIPE_API_KEY);
 const _ = require("lodash");
-const redis = require("redis");
 
 const CartModel = require("../../models/cart/cart.model");
 const OrderModel = require("../../models/order/order.model");
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars, generateOrderID } = require("../../utils/helpers");
-const { redisClient } = require('../../configs/redisClient');
+const { redisClient } = require('../../configs/redis-client');
 
 const createOrder = async (req, res) => {
   try {
@@ -172,7 +171,6 @@ const getMultipleOrders = async (req, res) => {
     const cacheKey = `orders-${getFirstThreeChars(orderIDs)}`;
     let orders;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -202,7 +200,6 @@ const getMultipleOrders = async (req, res) => {
       res.status(200).json(orders);
     }
 
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -214,7 +211,6 @@ const getOrders = async (req, res) => {
     const cacheKey = 'orders';
     let orders;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -244,7 +240,6 @@ const getOrders = async (req, res) => {
       res.status(200).json(orders);
     }
 
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -257,7 +252,6 @@ const getOrder = async (req, res) => {
     const cacheKey = `${orderID}`;
     let order;
 
-    await redisClient.connect();
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
@@ -287,7 +281,6 @@ const getOrder = async (req, res) => {
       res.status(200).json(order);
     }
 
-    redisClient.quit();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });

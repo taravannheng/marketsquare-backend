@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 const RelatedProductModel = require('../../models/products/related-products.model');
-const { redisClient } = require('../../configs/redisClient');
+const { redisClient } = require('../../configs/redis-client');
 
 const getRelatedProducts = async (req, res) => {
   try {

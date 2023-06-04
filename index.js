@@ -11,7 +11,7 @@ const orderRoutes = require('./routes/orders/order.route');
 const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middleware/logging/logging.middleware');
-const { connectToRedis } = require('./configs/redisClient');
+const { connectToRedis } = require('./configs/redis-client');
 
 const app = express();
 
