@@ -1,9 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./db');
 const bodyParser = require('body-parser');
 
+const connectDB = require('./configs/db');
 const productRoutes = require('./routes/products/products.route');
 const relatedProductRoutes = require('./routes/products/related-products.route');
 const cartRoutes = require('./routes/carts/cart.route');
@@ -11,7 +11,7 @@ const orderRoutes = require('./routes/orders/order.route');
 const slideshowRoutes = require('./routes/slideshows/slideshow.route');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middleware/logging/logging.middleware');
-const { connectToRedis } = require('./redisClient');
+const { connectToRedis } = require('./configs/redis-client');
 
 const app = express();
 
