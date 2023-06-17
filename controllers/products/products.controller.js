@@ -1,8 +1,8 @@
 const _ = require("lodash");
 
 const ProductModel = require("../../models/products/products.model");
-const { getFirstThreeChars } = require('../../utils/helpers');
-const { redisClient } = require('../../configs/redis-client');
+const { getFirstThreeChars } = require("../../utils/helpers");
+const { redisClient } = require("../../configs/redis-client");
 
 const createProduct = async (req, res) => {
   try {
@@ -27,16 +27,12 @@ const getProduct = async (req, res) => {
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
-      // call to db 
+      // call to db
       product = await ProductModel.find({ _id: productID });
 
       // set redis cache
       if (!_.isEmpty(product)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(product)
-        );
+        redisClient.setEx(cacheKey, 3600, JSON.stringify(product));
       }
     }
 
@@ -68,16 +64,12 @@ const getMultipleProducts = async (req, res) => {
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
-      // call to db 
-      products = await ProductModel.find({ _id: { $in: productIDs }});
+      // call to db
+      products = await ProductModel.find({ _id: { $in: productIDs } });
 
       // set redis cache
       if (!_.isEmpty(products)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(products)
-        );
+        redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
       }
     }
 
@@ -101,22 +93,18 @@ const getMultipleProducts = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const cacheKey = 'products';
+    const cacheKey = "products";
     let products;
 
     const redisData = await redisClient.get(cacheKey);
 
     if (_.isEmpty(redisData)) {
-      // call to db 
+      // call to db
       products = await ProductModel.find();
 
       // set redis cache
       if (!_.isEmpty(products)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(products)
-        );
+        redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
       }
     }
 
@@ -131,6 +119,40 @@ const getProducts = async (req, res) => {
 
     if (!_.isEmpty(products)) {
       res.status(200).json(products);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const searchProducts = async (req, res) => {
+  try {
+    const { searchTerm } = req.query;
+    const cacheKey = "products";
+    let searchResults;
+
+    const redisData = await redisClient.get(cacheKey);
+
+    if (_.isEmpty(redisData) && !_.isEmpty(searchTerm)) {
+      searchResults = await ProductModel.find({
+        name: { $regex: searchTerm, $options: "i" },
+      });
+    }
+
+    if (!_.isEmpty(redisData) && !_.isEmpty(searchTerm)) {
+      const products = JSON.parse(redisData);
+      searchResults = products.filter((product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (_.isEmpty(searchResults)) {
+      res.status(204).json({ message: "No products found..." });
+    }
+
+    if (!_.isEmpty(searchResults)) {
+      res.status(200).json(searchResults);
     }
   } catch (error) {
     console.error(error);
@@ -182,6 +204,7 @@ module.exports = {
   getProduct,
   getMultipleProducts,
   getProducts,
+  searchProducts,
   updateProduct,
   deleteProduct,
 };
