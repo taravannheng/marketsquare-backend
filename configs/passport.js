@@ -1,35 +1,8 @@
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 
 const UserModel = require("../models/users/user.model");
-const { verifyPassword } = require("../utils/helpers");
-
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "email",
-      session: false,
-    },
-    async (email, password, done) => {
-      // find the user in the database using email
-      const user = UserModel.findOne({ email });
-
-      if (!user) {
-        return done(null, false, { message: "Incorrect email." });
-      }
-
-      // check if the password is correct
-      if (!(await verifyPassword(password, user.password))) {
-        return done(null, false, { message: "Incorrect password." });
-      }
-
-      // if email and password are correct, return user
-      return done(null, user);
-    }
-  )
-);
 
 passport.use(
   new GoogleStrategy(
@@ -38,19 +11,22 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: "/api/auth/google/callback",
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
         // search user in database using profile.id
-        const query = { email: profile.emails[0].value };
-        const user = UserModel.findOne(query);
+        const query = { id: profile.id };
+        const user = await UserModel.findOne(query);
 
+        console.log(user);
+
+        // if the user is found, return them
         if (user) {
-          // if the user is found, return them
           return done(null, user);
         }
 
         // if the user is not found, create them in the database
         const newUser = new UserModel({
+          id: profile.id,
           provider: "google",
           username: profile.displayName,
           email: profile.emails[0].value,
@@ -72,15 +48,13 @@ passport.use(
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL: "/api/auth/facebook/callback",
-      profileFields: ["id", "email", "name", "photos"],
+      profileFields: ["id", "emails", "name", "photos"],
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // search user in database using email extract from profile
-        const query = { email: profile.emails[0].value };
-        const user = UserModel.findOne(query);
-
-        console.log("the user: ", user);
+        // search user in database using id
+        const query = { id: profile.id };
+        const user = await UserModel.findOne(query);
 
         if (user) {
           // if the user is found, return them
@@ -89,9 +63,9 @@ passport.use(
 
         // if the user is not found, create them in the database
         const newUser = new UserModel({
+          id: profile.id,
           provider: "facebook",
-          username: profile.displayName,
-          email: profile.emails[0].value,
+          username: `${profile.name.givenName} ${profile.name.familyName}`,
           profileUrl: profile.photos[0].value,
         });
 
