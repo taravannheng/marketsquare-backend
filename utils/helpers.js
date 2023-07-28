@@ -1,3 +1,5 @@
+const argon2 = require('argon2');
+
 const generateCartID = async () => {
   const nanoid = (await import('nanoid')).nanoid;
   const cartID = nanoid();
@@ -20,4 +22,44 @@ const getFirstThreeChars = (ids) => {
   return result;
 }
 
-module.exports = { generateOrderID, generateCartID, getFirstThreeChars };
+const hashPassword = async (password) => {
+  let hashedPassword;
+  const hashedPasswordString = (async () => {
+    const hash = await argon2.hash(password, {
+      memoryCost: 1 << 19,
+      timeCost: 2,
+      parallelism: 1,
+      type: argon2.argon2id,
+    });    
+    return hash;
+  })();
+
+  const regex = /^\$argon2id\$v=\d+\$m=\d+,t=\d+,p=\d+\$[A-Za-z0-9+\/]+\$([A-Za-z0-9+\/]+)$/;
+  const match = (await hashedPasswordString).toString().match(regex);
+
+  if (match && match[1]) {
+    hashedPassword = match[1];
+  } else {
+    hashedPassword = null;
+  }
+
+  return hashedPassword;
+}
+
+const verifyPassword = async (hashedPassword, plainPassword) => {
+  try {
+    if(await argon2.verify(hashedPassword, plainPassword)) {
+      // password match
+      return true;
+    } else {
+      // password did not match
+      return false;
+    }
+  } catch (err) {
+    // internal failure
+    return false;
+  }
+}
+
+
+module.exports = { generateOrderID, generateCartID, getFirstThreeChars, hashPassword, verifyPassword };
