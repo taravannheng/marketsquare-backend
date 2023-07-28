@@ -40,7 +40,7 @@ router.get(
 // Facebook Auth
 router.get(
   "/auth/facebook",
-  passport.authenticate("facebook", { session: false, scope: "email" })
+  passport.authenticate("facebook", { session: false, scope: ["email"] })
 );
 router.get(
   "/auth/facebook/callback",

@@ -8,6 +8,6 @@ const {
 const validateInput = require("../../middlewares/input-validator/input-validator.middleware");
 
 router.post("/users", validateInput, createUser);
-router.get("/users/:email", getUser);
+router.get("/users/:id", getUser);
 
 module.exports = router;

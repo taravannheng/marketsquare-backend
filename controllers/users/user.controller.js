@@ -3,6 +3,7 @@ const passport = require('passport');
 
 const { hashPassword } = require("../../utils/helpers");
 const UserModel = require("../../models/users/user.model");
+const { generateUserId } = require("../../utils/helpers");
 
 const createUser = async (req, res) => {
   try {
@@ -20,6 +21,7 @@ const createUser = async (req, res) => {
     if (_.isEmpty(foundUser)) {
       // add the user to the database
       const userData = {
+        id: await generateUserId(),
         provider: 'local',
         username,
         email,
@@ -42,8 +44,8 @@ const createUser = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const email = req.params.email;
-    const user = await UserModel.find({ email });
+    const id = req.params.id;
+    const user = await UserModel.find({ id });
 
     if (_.isEmpty(user)) {
       res.status(204).json({ message: "No user found..." });
