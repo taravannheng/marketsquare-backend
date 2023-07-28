@@ -7,6 +7,13 @@ const generateCartID = async () => {
   return cartID;
 };
 
+const generateUserId = async () => {
+  const nanoid = (await import('nanoid')).nanoid;
+  const userId = nanoid();
+
+  return userId;
+};
+
 const generateOrderID = async () => {
   const { customAlphabet } = await import('nanoid');
 
@@ -46,20 +53,5 @@ const hashPassword = async (password) => {
   return hashedPassword;
 }
 
-const verifyPassword = async (hashedPassword, plainPassword) => {
-  try {
-    if(await argon2.verify(hashedPassword, plainPassword)) {
-      // password match
-      return true;
-    } else {
-      // password did not match
-      return false;
-    }
-  } catch (err) {
-    // internal failure
-    return false;
-  }
-}
 
-
-module.exports = { generateOrderID, generateCartID, getFirstThreeChars, hashPassword, verifyPassword };
+module.exports = { generateOrderID, generateCartID, getFirstThreeChars, hashPassword, generateUserId };
