@@ -26,9 +26,7 @@ router.get(
     // append the token as a query parameter to your success URL
     const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
-    res.cookie("jwt", token, {
-      secure: process.env.NODE_ENV !== 'development',
-    });
+    res.cookie("jwt", token);
 
     // redirect the user to the success URL
     res.redirect(successUrl);
@@ -55,9 +53,7 @@ router.get(
     // Successful authentication, redirect home.
     const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
-    res.cookie("jwt", token, {
-      secure: process.env.NODE_ENV !== 'development',
-    });
+    res.cookie("jwt", token);
 
     // redirect the user to the success URL
     res.redirect(successUrl);
