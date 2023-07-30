@@ -27,8 +27,8 @@ router.get(
     const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
     res.cookie("jwt", token, {
-      secure: false,
-    }); // use secure: true if you are using https
+      secure: process.env.NODE_ENV !== 'development',
+    });
 
     // redirect the user to the success URL
     res.redirect(successUrl);
@@ -56,8 +56,8 @@ router.get(
     const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
     res.cookie("jwt", token, {
-      secure: false,
-    }); // use secure: true if you are using https
+      secure: process.env.NODE_ENV !== 'development',
+    });
 
     // redirect the user to the success URL
     res.redirect(successUrl);
