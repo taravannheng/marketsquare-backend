@@ -27,7 +27,8 @@ require('./configs/passport');
 // Middlewares
 app.use(loggingMiddleWare);
 app.use(cors({
-  origin: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}`
+  origin: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}`,
+  credentials: true,
 }));
 app.use(bodyParser.json());
 app.use(helmet());
