@@ -24,11 +24,9 @@ router.get(
     });
 
     // append the token as a query parameter to your success URL
-    const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?success=true`;
+    const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
     res.cookie("jwt", token, {
-      httpOnly: true,
-      sameSite: "strict",
       secure: false,
     }); // use secure: true if you are using https
 
@@ -48,18 +46,16 @@ router.get(
     session: false,
     failureRedirect: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/sign-up?error=true`,
   }),
-  function (req, res) {
+  (req, res) => {
     // user is authenticated, create JWT
     const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h", // token expires in 1 hour
     });
 
     // Successful authentication, redirect home.
-    const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?success=true`;
+    const successUrl = `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/?signedIn=true`;
 
     res.cookie("jwt", token, {
-      httpOnly: true,
-      sameSite: "strict",
       secure: false,
     }); // use secure: true if you are using https
 

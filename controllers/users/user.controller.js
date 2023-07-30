@@ -42,10 +42,10 @@ const createUser = async (req, res) => {
   }
 };
 
-const getUser = async (req, res) => {
+const getUserByEmail = async (req, res) => {
   try {
-    const id = req.params.id;
-    const user = await UserModel.find({ id });
+    const email = req.params.email;
+    const user = await UserModel.find({ email });
 
     if (_.isEmpty(user)) {
       res.status(204).json({ message: "No user found..." });
@@ -60,7 +60,25 @@ const getUser = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (_.isEmpty(user)) {
+      res.status(204).json({ message: "No user found..." });
+    }
+
+    if (!_.isEmpty(user)) {
+      res.status(200).json(user);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createUser,
+  getUserByEmail,
   getUser,
 };
