@@ -1,5 +1,7 @@
 const argon2 = require("argon2");
 
+const sgMail = require('../configs/sendgrid.config');
+
 const generateCartID = async () => {
   const nanoid = (await import("nanoid")).nanoid;
   const cartID = nanoid();
@@ -52,6 +54,39 @@ const verifyPassword = async (hashedPassword, plainPassword) => {
   }
 };
 
+// use nanoid to generate a random string which include 4 numbers
+const generateResetPasswordCode = async () => {
+  const { customAlphabet } = await import("nanoid");
+
+  const alphabet = "0123456789";
+  const generate = customAlphabet(alphabet, 4);
+  const resetPasswordCode = generate();
+
+  return resetPasswordCode;
+};
+
+const sendResetPasswordCode = async (to, code) => {
+  const msg = {
+    to,
+    from: `${process.env.NOREPLY_EMAIL}`,
+    templateId: `${process.env.SENDGRID_TEMPLATE_ID}`,
+    dynamicTemplateData: {
+      code,
+      link: `${process.env.ACCESS_CONTROL_ALLOW_ORIGIN}/reset-password/verify?email=${to}`,
+    },
+  };
+
+  return sgMail
+    .send(msg)
+    .then(() => {
+      return 'Email sent successfully';
+    })
+    .catch((error) => {
+      return error;
+    });
+}
+
+
 module.exports = {
   generateOrderID,
   generateCartID,
@@ -59,4 +94,6 @@ module.exports = {
   hashPassword,
   generateUserId,
   verifyPassword,
+  generateResetPasswordCode,
+  sendResetPasswordCode,
 };
