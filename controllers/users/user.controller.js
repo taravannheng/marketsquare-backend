@@ -1,8 +1,9 @@
 const _ = require("lodash");
-const passport = require('passport');
+const passport = require("passport");
 
 const { hashPassword } = require("../../utils/helpers");
 const UserModel = require("../../models/users/user.model");
+const PasswordResetModel = require("../../models/password-resets/password-reset.model");
 const { generateUserId } = require("../../utils/helpers");
 
 const createUser = async (req, res) => {
@@ -22,11 +23,11 @@ const createUser = async (req, res) => {
       // add the user to the database
       const userData = {
         id: await generateUserId(),
-        provider: 'local',
+        provider: "local",
         username,
         email,
         password: hashedPassword,
-      }
+      };
       const newUser = new UserModel(userData);
       newUser.save();
 
@@ -56,7 +57,7 @@ const getUserByEmail = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error" }); 
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -77,8 +78,55 @@ const getUser = async (req, res) => {
   }
 };
 
+const updatePassword = async (req, res) => {
+  try {
+    const email = req.params.email;
+    const { password } = req.body;
+
+    // use email to find check if the reset code has been verified
+    const resetData = await PasswordResetModel.findOne({ email }).sort({
+      expirationDate: -1,
+    });
+
+    if (_.isEmpty(resetData)) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    if (!_.isEmpty(resetData)) {
+      if (resetData.isVerified === false) {
+        return res
+          .status(400)
+          .json({
+            message:
+              "Verification code is not yet verified. Please verify the 4-digit code which can be found in your reset password code email.",
+          });
+      }
+
+      // hash the password
+      const hashedPassword = await hashPassword(password);
+
+      // update the password
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email },
+        { password: hashedPassword }
+      );
+
+      // delete the reset code
+      if (updatedUser) {
+        await PasswordResetModel.deleteOne({ email });
+      }
+
+      res.status(200).json({ message: "Password updated successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createUser,
   getUserByEmail,
   getUser,
+  updatePassword,
 };
