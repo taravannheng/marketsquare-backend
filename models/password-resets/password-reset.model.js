@@ -20,6 +20,14 @@ const PasswordResetSchema = new Schema({
     default: false,
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const PasswordResetModel = mongoose.model("PasswordReset", PasswordResetSchema);
