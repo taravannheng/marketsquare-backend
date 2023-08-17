@@ -78,7 +78,7 @@ const getUser = async (req, res) => {
       res.status(204).json({ message: "No user found..." });
     }
 
-    if (!_.isEmpty(user) {
+    if (!_.isEmpty(user)) {
       res.status(200).json(user);
     }
   } catch (error) {
