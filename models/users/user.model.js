@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const UserModel = mongoose.model('User', userSchema);
