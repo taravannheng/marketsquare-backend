@@ -322,10 +322,10 @@ const updateOrder = async (req, res) => {
   const order = req.body;
 
   try {
-    const order = await OrderModel.find({ orderID: orderID });
+    const foundOrder = await OrderModel.find({ orderID: orderID });
 
     // if isDeleted is true, return 404
-    if (order[0].isDeleted) {
+    if (foundOrder.isDeleted) {
       return res.status(404).json({ message: "Order not found" });
     }
 
