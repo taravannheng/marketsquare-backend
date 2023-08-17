@@ -11,6 +11,14 @@ const relatedProductSchema = new Schema({
     required: true,
     ref: 'Product',
   }],
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const RelatedProductModel = mongoose.model('Category', relatedProductSchema);
