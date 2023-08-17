@@ -70,7 +70,7 @@ const createOrder = async (req, res) => {
       res.json({ order: orderDataFrontend });
     }
 
-    // ifi not -> create order -> send to frontend
+    // if not existing -> create order -> send to frontend
     if (_.isEmpty(existingOrder)) {
       // get stripe session id from db
       const cart = await CartModel.find({ cartID: cartID });
@@ -152,6 +152,10 @@ const createOrder = async (req, res) => {
       // send data to db
       const { products, ...orderDataDB } = orderDataFrontend;
 
+      // add additional fields for soft deleting
+      orderDataDB.isDeleted = false;
+      orderDataDB.deletedAt = null;
+
       const order = new OrderModel(orderDataDB);
       order.save();
 
@@ -173,6 +177,7 @@ const getMultipleOrders = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       orders = await OrderModel.find({ orderID: { $in: orderIDs }});
@@ -187,6 +192,7 @@ const getMultipleOrders = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set orders to redisData
       orders = JSON.parse(redisData);
@@ -197,7 +203,14 @@ const getMultipleOrders = async (req, res) => {
     }
 
     if (!_.isEmpty(orders)) {
-      res.status(200).json(orders);
+      // filter deleted orders
+      const filteredOrders = orders.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredOrders)) {
+        return res.status(204).json({ message: "No orders found..." });
+      }
+
+      res.status(200).json(filteredOrders);
     }
 
   } catch (error) {
@@ -213,6 +226,7 @@ const getOrders = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       orders = await OrderModel.find();
@@ -227,6 +241,7 @@ const getOrders = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set orders to redisData
       orders = JSON.parse(redisData);
@@ -237,7 +252,14 @@ const getOrders = async (req, res) => {
     }
 
     if (!_.isEmpty(orders)) {
-      res.status(200).json(orders);
+      // filter deleted orders
+      const filteredOrders = orders.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredOrders)) {
+        return res.status(204).json({ message: "No orders found..." });
+      }
+      
+      res.status(200).json(filteredOrders);
     }
 
   } catch (error) {
@@ -254,6 +276,7 @@ const getOrder = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       order = await OrderModel.find({ orderID: orderID });
@@ -268,6 +291,7 @@ const getOrder = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set order to redisData
       order = JSON.parse(redisData);
@@ -278,7 +302,14 @@ const getOrder = async (req, res) => {
     }
 
     if (!_.isEmpty(order)) {
-      res.status(200).json(order);
+      // filter deleted orders
+      const filteredOrders = order.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredOrders)) {
+        return res.status(204).json({ message: "No order found..." });
+      }
+
+      res.status(200).json(filteredOrders);
     }
 
   } catch (error) {
@@ -291,6 +322,13 @@ const updateOrder = async (req, res) => {
   const order = req.body;
 
   try {
+    const order = await OrderModel.find({ orderID: orderID });
+
+    // if isDeleted is true, return 404
+    if (order[0].isDeleted) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
     const result = await OrderModel.updateOne(
       { orderID: orderID },
       { $set: order }
@@ -311,9 +349,12 @@ const deleteOrder = async (req, res) => {
   const orderID = req.params.orderID;
 
   try {
-    const result = await OrderModel.deleteOne({ orderID: orderID });
+    const result = await OrderModel.updateOne(
+      { orderID: orderID },
+      { $set: { isDeleted: true, deletedAt: new Date() } }
+    );
 
-    if (result.deletedCount === 1) {
+    if (result.modifiedCount === 1) {
       res.status(200).json({ message: "Order deleted successfully" });
     } else {
       console.error(result);
