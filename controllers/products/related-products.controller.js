@@ -11,6 +11,7 @@ const getRelatedProducts = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       relatedProducts = await RelatedProductModel.find({ products: productID });
@@ -25,6 +26,7 @@ const getRelatedProducts = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set product to redisData
       relatedProducts = JSON.parse(redisData);
@@ -35,7 +37,14 @@ const getRelatedProducts = async (req, res) => {
     }
 
     if (!_.isEmpty(relatedProducts)) {
-      res.status(200).json(relatedProducts);
+      // filter deleted products
+      const filteredProducts = relatedProducts.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredProducts)) {
+        return res.status(204).json({ message: "No products found..." });
+      }
+
+      res.status(200).json(filteredProducts);
     }
   } catch(error) {
     console.error(error);
