@@ -78,15 +78,8 @@ const getUser = async (req, res) => {
       res.status(204).json({ message: "No user found..." });
     }
 
-    if (!_.isEmpty(user)) {
-      // filter out deleted user
-      const filteredUser = user.filter((user) => user.isDeleted === false);
-
-      if (_.isEmpty(filteredUser)) {
-        res.status(204).json({ message: "No user found..." });
-      }
-
-      res.status(200).json(filteredUser);
+    if (!_.isEmpty(user) {
+      res.status(200).json(user);
     }
   } catch (error) {
     console.error(error);
