@@ -73,7 +73,7 @@ const getSlideshow = async (req, res) => {
         return res.status(204).json({ message: "No slideshow found..." });
       }
 
-      res.status(200).json(filteredSlideshow);
+      res.status(200).json(filteredSlideshow[0]);
     }
   } catch (error) {
     console.error(error);
