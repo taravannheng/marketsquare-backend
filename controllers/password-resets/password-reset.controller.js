@@ -16,6 +16,11 @@ const requestPasswordReset = async (req, res) => {
     }
 
     if (!_.isEmpty(foundEmail)) {
+      // if isDeleted is true, return 404
+      if (foundEmail.isDeleted === true) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+
       // send email
       try {
         const code = await generateResetPasswordCode();
@@ -55,6 +60,11 @@ const verifyPasswordReset = async (req, res) => {
     }
 
     if (!_.isEmpty(resetData)) {
+      // if isDeleted is true, return 404
+      if (resetData.isDeleted === true) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+
       if (resetData.code !== code || resetData.isVerified === true) {
         return res.status(400).json({ message: "Code is invalid" });
       }

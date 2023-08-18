@@ -77,6 +77,8 @@ const createCart = async (req, res) => {
       cartID: cartID,
       stripeSessionID: session.id,
       products: productsInCart,
+      isDeleted: false,
+      deletedAt: null,
     };
 
     const cart = new CartModel(cartData);
@@ -97,6 +99,7 @@ const getCart = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       cart = await CartModel.find({ cartID: cartID });
@@ -111,6 +114,7 @@ const getCart = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set cart to redisData
       cart = JSON.parse(redisData);
@@ -121,7 +125,14 @@ const getCart = async (req, res) => {
     }
 
     if (!_.isEmpty(cart)) {
-      res.status(200).json(cart);
+      // filter deleted carts
+      const filteredCart = cart.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredCart)) {
+        return res.status(204).json({ message: "No cart found..." });
+      }
+
+      res.status(200).json(filteredCart);
     }
   } catch (error) {
     console.error(error);
@@ -138,6 +149,7 @@ const getMultipleCarts = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       carts = await CartModel.find({ cartID: { $in: cartIDs }});
@@ -152,6 +164,7 @@ const getMultipleCarts = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set carts to redisData
       carts = JSON.parse(redisData);
@@ -162,7 +175,14 @@ const getMultipleCarts = async (req, res) => {
     }
 
     if (!_.isEmpty(carts)) {
-      res.status(200).json(carts);
+      // filter deleted carts
+      const filteredCarts = carts.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredCarts)) {
+        return res.status(204).json({ message: "No carts found..." });
+      }
+
+      res.status(200).json(filteredCarts);
     }
   } catch (error) {
     console.error(error);
@@ -177,6 +197,7 @@ const getCarts = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db 
       carts = await CartModel.find();
@@ -191,6 +212,7 @@ const getCarts = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set carts to redisData
       carts = JSON.parse(redisData);
@@ -201,7 +223,14 @@ const getCarts = async (req, res) => {
     }
 
     if (!_.isEmpty(carts)) {
-      res.status(200).json(carts);
+      // filter deleted carts
+      const filteredCarts = carts.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredCarts)) {
+        return res.status(204).json({ message: "No carts found..." });
+      }
+
+      res.status(200).json(filteredCarts);
     }
   } catch (error) {
     console.error(error);
@@ -214,10 +243,19 @@ const updateCart = async (req, res) => {
   const carts = req.body;
 
   try {
+    const cart = await CartModel.findOne({ cartID: cartID });
+
+    // If cart is deleted, return 404
+    if (cart.isDeleted) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    // If cart is not deleted, update cart
     const result = await CartModel.updateOne(
       { cartID: cartID },
       { $set: carts }
     );
+
     if (result.modifiedCount === 1) {
       res.status(200).json({ message: "Document updated successfully" });
     } else {
@@ -236,9 +274,12 @@ const deleteCart = async (req, res) => {
   const cartID = req.params.cartID;
 
   try {
-    const result = await CartModel.deleteOne({ cartID: cartID });
+    const result = await CartModel.updateOne(
+      { cartID: cartID },
+      { $set: { isDeleted: true, deletedAt: new Date() } }
+    );
 
-    if (result.deletedCount === 1) {
+    if (result.modifiedCount === 1) {
       res.status(200).json({ message: "Document deleted successfully" });
     } else {
       console.error(result);

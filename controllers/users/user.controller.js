@@ -27,6 +27,8 @@ const createUser = async (req, res) => {
         username,
         email,
         password: hashedPassword,
+        isDeleted: false,
+        deletedAt: null,
       };
       const newUser = new UserModel(userData);
       newUser.save();
@@ -53,7 +55,14 @@ const getUserByEmail = async (req, res) => {
     }
 
     if (!_.isEmpty(user)) {
-      res.status(200).json(user);
+      // filter out deleted user
+      const filteredUser = user.filter((user) => user.isDeleted === false);
+
+      if (_.isEmpty(filteredUser)) {
+        res.status(204).json({ message: "No user found..." });
+      }
+
+      res.status(200).json(filteredUser);
     }
   } catch (error) {
     console.error(error);
@@ -92,14 +101,28 @@ const updatePassword = async (req, res) => {
       return res.status(404).json({ message: "Email not found" });
     }
 
+    // if resetData is deleted
+    if (resetData.isDeleted === true) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
     if (!_.isEmpty(resetData)) {
       if (resetData.isVerified === false) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Verification code is not yet verified. Please verify the 4-digit code which can be found in your reset password code email.",
-          });
+        return res.status(400).json({
+          message:
+            "Verification code is not yet verified. Please verify the 4-digit code which can be found in your reset password code email.",
+        });
+      }
+
+      // if the user is deleted
+      const foundUser = await UserModel.findOne({ email });
+
+      if (_.isEmpty(foundUser)) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+
+      if (foundUser.isDeleted === true) {
+        return res.status(404).json({ message: "Email not found" });
       }
 
       // hash the password
@@ -113,7 +136,10 @@ const updatePassword = async (req, res) => {
 
       // delete the reset code
       if (updatedUser) {
-        await PasswordResetModel.deleteOne({ email });
+        await PasswordResetModel.updateOne(
+          { email },
+          { $set: { isDeleted: true, deletedAt: Date.now() } }
+        );
       }
 
       res.status(200).json({ message: "Password updated successfully" });

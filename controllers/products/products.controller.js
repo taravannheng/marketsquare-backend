@@ -8,6 +8,10 @@ const createProduct = async (req, res) => {
   try {
     const productData = req.body;
 
+    // add fields for soft delete
+    productData.isDeleted = false;
+    productData.deletedAt = null;
+
     const product = new ProductModel(productData);
     product.save();
 
@@ -26,6 +30,7 @@ const getProduct = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db
       product = await ProductModel.find({ _id: productID });
@@ -36,6 +41,7 @@ const getProduct = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set product to redisData
       product = JSON.parse(redisData);
@@ -46,7 +52,16 @@ const getProduct = async (req, res) => {
     }
 
     if (!_.isEmpty(product)) {
-      res.status(200).json(product);
+      // filter out deleted products
+      filteredProduct = product.filter(
+        (product) => product.isDeleted === false
+      );
+
+      if (_.isEmpty(filteredProduct)) {
+        return res.status(204).json({ message: "No product found..." });
+      }
+
+      res.status(200).json(filteredProduct);
     }
   } catch (error) {
     console.error(error);
@@ -63,6 +78,7 @@ const getMultipleProducts = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db
       products = await ProductModel.find({ _id: { $in: productIDs } });
@@ -73,6 +89,7 @@ const getMultipleProducts = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set products to redisData
       products = JSON.parse(redisData);
@@ -83,7 +100,16 @@ const getMultipleProducts = async (req, res) => {
     }
 
     if (!_.isEmpty(products)) {
-      res.status(200).json(products);
+      // filter out deleted products
+      const filteredProducts = products.filter(
+        (product) => product.isDeleted === false
+      );
+
+      if (_.isEmpty(filteredProducts)) {
+        return res.status(204).json({ message: "No products found..." });
+      }
+
+      res.status(200).json(filteredProducts);
     }
   } catch (error) {
     console.error(error);
@@ -98,6 +124,7 @@ const getProducts = async (req, res) => {
 
     const redisData = await redisClient.get(cacheKey);
 
+    // CACHE MISS
     if (_.isEmpty(redisData)) {
       // call to db
       products = await ProductModel.find();
@@ -108,6 +135,7 @@ const getProducts = async (req, res) => {
       }
     }
 
+    // CACHE HIT
     if (!_.isEmpty(redisData)) {
       // set product to redisData
       products = JSON.parse(redisData);
@@ -118,7 +146,16 @@ const getProducts = async (req, res) => {
     }
 
     if (!_.isEmpty(products)) {
-      res.status(200).json(products);
+      // filter out deleted products
+      const filteredProducts = products.filter(
+        (product) => product.isDeleted === false
+      );
+
+      if (_.isEmpty(filteredProducts)) {
+        return res.status(204).json({ message: "No products found..." });
+      }
+
+      res.status(200).json(filteredProducts);
     }
   } catch (error) {
     console.error(error);
@@ -152,7 +189,16 @@ const searchProducts = async (req, res) => {
     }
 
     if (!_.isEmpty(searchResults)) {
-      res.status(200).json(searchResults);
+      // filter out deleted products
+      const filteredSearchResults = searchResults.filter(
+        (product) => product.isDeleted === false
+      );
+
+      if (_.isEmpty(filteredSearchResults)) {
+        return res.status(204).json({ message: "No products found..." });
+      }
+
+      res.status(200).json(filteredSearchResults);
     }
   } catch (error) {
     console.error(error);
@@ -165,15 +211,37 @@ const updateProduct = async (req, res) => {
   const product = req.body;
 
   try {
-    const result = await ProductModel.updateOne(
-      { _id: productID },
-      { $set: product }
-    );
-    if (result.modifiedCount === 1) {
-      res.status(200).json({ message: "Product updated successfully" });
-    } else {
-      console.error(result);
-      res.status(404).json({ message: "Product not found or no changes made" });
+    // find product by id
+    const foundProduct = await ProductModel.findOne({ _id: productID });
+
+    if (_.isEmpty(foundProduct)) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (!_.isEmpty(foundProduct)) {
+      // if isDeleted is true, return 404
+      if (foundProduct.isDeleted === true) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // update product
+      try {
+        const result = await ProductModel.updateOne(
+          { _id: productID },
+          { $set: product }
+        );
+        if (result.modifiedCount === 1) {
+          res.status(200).json({ message: "Product updated successfully" });
+        } else {
+          console.error(result);
+          res
+            .status(404)
+            .json({ message: "Product not found or no changes made" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error updating product" });
+      }
     }
   } catch (error) {
     console.error(error);
@@ -185,9 +253,12 @@ const deleteProduct = async (req, res) => {
   const productID = req.params.productID;
 
   try {
-    const result = await ProductModel.deleteOne({ _id: productID });
+    const result = await ProductModel.updateOne(
+      { _id: productID },
+      { $set: { isDeleted: true, deletedAt: new Date() } }
+    );
 
-    if (result.deletedCount === 1) {
+    if (result.modifiedCount === 1) {
       res.status(200).json({ message: "Product deleted successfully" });
     } else {
       console.error(result);
