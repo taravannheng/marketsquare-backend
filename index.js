@@ -15,6 +15,7 @@ const userRoutes = require('./routes/users/user.routes');
 const authRoutes = require('./routes/auth/auth.routes');
 const signInRoutes = require('./routes/signin/signin.route');
 const passwordRoutes = require('./routes/passwords/password.routes');
+const reviewRoutes = require('./routes/reviews/reviews.routes');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middlewares/logging/logging.middleware');
 const { connectToRedis } = require('./configs/redis-client');
@@ -48,6 +49,7 @@ app.use('/api', userRoutes);
 app.use('/api', authRoutes);
 app.use('/api', signInRoutes);
 app.use('/api', passwordRoutes);
+app.use('/api', reviewRoutes);
 app.use(notFoundRoute);
 
 // Port
