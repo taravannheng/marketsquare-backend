@@ -268,6 +268,32 @@ const getOrders = async (req, res) => {
   }
 };
 
+const getOrdersByUserID = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+
+    const orders = await OrderModel.find({ userID });
+
+    if (_.isEmpty(orders)) {
+      res.status(204).json({ message: "No orders found..." });
+    }
+
+    if (!_.isEmpty(orders)) {
+      // filter deleted orders
+      const filteredOrders = orders.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredOrders)) {
+        return res.status(204).json({ message: "No orders found..." });
+      }
+
+      res.status(200).json(filteredOrders);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const getOrder = async (req, res) => {
   try {
     const orderID = req.params.orderID;
@@ -317,6 +343,83 @@ const getOrder = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+const getOrdersByUserIDAndProductID = async (req, res) => {
+  try {
+    const userID = req.params.userID;
+    const productID = req.params.productID;
+
+    // get all orders that matches userID
+    const orders = await OrderModel.find({ userID });
+
+    if (_.isEmpty(orders)) {
+      res.status(204).json({ message: "No orders found..." });
+    }
+
+    if (!_.isEmpty(orders)) {
+      // filter deleted orders
+      const filteredOrders = orders.filter(({ isDeleted }) => !isDeleted);
+
+      if (_.isEmpty(filteredOrders)) {
+        return res.status(204).json({ message: "No orders found..." });
+      }
+
+      // get all carts that matches orders
+      const cartIDs = filteredOrders.map((order) => order.cartID);
+
+      const carts = await CartModel.find({ cartID: { $in: cartIDs } });
+
+      if (_.isEmpty(carts)) {
+        return res.status(204).json({ message: "No orders found..." });
+      }
+
+      if (!_.isEmpty(carts)) {
+        // filter deleted carts
+        const filteredCarts = carts.filter(({ isDeleted }) => !isDeleted);
+
+        if (_.isEmpty(filteredCarts)) {
+          return res.status(204).json({ message: "No orders found..." });
+        }
+
+        // loop through carts and check if there is any product that matches productID
+        const matchedCartIDs = filteredCarts.filter((cart) => {
+          const foundProduct = cart.products.find(
+            (product) => product._id.toString() === productID
+          );
+
+          if (foundProduct) {
+            return cart.cartID;
+          }
+        });
+
+        if (_.isEmpty(matchedCartIDs)) {
+          return res.status(204).json({ message: "No orders found..." });
+        }
+
+        if (!_.isEmpty(matchedCartIDs)) {
+          // find orders that matches that matchedCartIDs
+          const matchedOrders = filteredOrders.filter((order) => {
+            const foundCart = matchedCartIDs.find(
+              (cart) => cart.cartID === order.cartID
+            );
+
+            if (foundCart) {
+              return order;
+            }
+
+            return null;
+          });
+
+          return res.status(200).json(matchedOrders);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const updateOrder = async (req, res) => {
   const orderID = req.params.orderID;
   const order = req.body;
@@ -370,6 +473,8 @@ module.exports = {
   createOrder,
   getOrder,
   getMultipleOrders,
+  getOrdersByUserID,
+  getOrdersByUserIDAndProductID,
   getOrders,
   updateOrder,
   deleteOrder,

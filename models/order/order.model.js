@@ -10,15 +10,9 @@ const orderSchema = new Schema({
     type: String,
     required: true
   },
-  customer: {
-    email: {
-      type: String,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true
-    }
+  userID: {
+    type: Schema.Types.ObjectId,
+    required: true
   },
   payment: {
     amount: {
