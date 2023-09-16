@@ -4,7 +4,6 @@ const passport = require("passport");
 const { hashPassword } = require("../../utils/helpers");
 const UserModel = require("../../models/users/user.model");
 const PasswordResetModel = require("../../models/password-resets/password-reset.model");
-const { generateUserId } = require("../../utils/helpers");
 
 const createUser = async (req, res) => {
   try {
@@ -22,7 +21,6 @@ const createUser = async (req, res) => {
     if (_.isEmpty(foundUser)) {
       // add the user to the database
       const userData = {
-        id: await generateUserId(),
         provider: "local",
         username,
         email,
@@ -79,14 +77,7 @@ const getUser = async (req, res) => {
     }
 
     if (!_.isEmpty(user)) {
-      // filter out deleted user
-      const filteredUser = user.filter((user) => user.isDeleted === false);
-
-      if (_.isEmpty(filteredUser)) {
-        res.status(204).json({ message: "No user found..." });
-      }
-
-      res.status(200).json(filteredUser);
+      res.status(200).json(user);
     }
   } catch (error) {
     console.error(error);
