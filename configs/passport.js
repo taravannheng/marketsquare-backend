@@ -45,10 +45,8 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         // search user in database using profile.id
-        const query = { id: profile.id };
+        const query = { email: profile.emails[0].value };
         const user = await UserModel.findOne(query);
-
-        console.log(user);
 
         // if the user is found, return them
         if (user) {
@@ -57,7 +55,6 @@ passport.use(
 
         // if the user is not found, create them in the database
         const newUser = new UserModel({
-          id: profile.id,
           provider: "google",
           username: profile.displayName,
           email: profile.emails[0].value,
@@ -117,8 +114,7 @@ opts.secretOrKey = process.env.JWT_SECRET;
 passport.use(
   new JWTStrategy(opts, async (jwtPayload, done) => {
     try {
-      console.log('inside strategy');
-      const user = await UserModel.findOne({ id: jwtPayload.id });
+      const user = await UserModel.findOne({ _id: jwtPayload.id });
 
       if (!user) {
         return done(null, false, { message: "User not found" });

@@ -9,10 +9,7 @@ const validateInput = [
     .isLength({ min: 4, max: 20 })
     .withMessage("Username must be at least 4 to 20 characters long")
     .bail()
-    .matches(/^\S+$/)
-    .withMessage("Username must not contain spaces")
-    .bail()
-    .matches(/^[a-zA-Z0-9_]+$/)
+    .matches(/^[a-zA-Z0-9_ ]+$/)
     .withMessage("Username must contain only letters, numbers and underscores"),
 
   // Validate 'email' field

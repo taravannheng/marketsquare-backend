@@ -12,12 +12,12 @@ router.post('/signin',
     }
 
     // if user is authenticated, generate a JWT token
-    const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h", // token expires in 1 hour
     });
 
     return res.status(200).json({ message: "Sign in successfully", token, user: {
-      id: req.user.id,
+      _id: req.user._id,
       username: req?.user?.username,
       email: req?.user?.email ?? null,
       profileUrl: req?.user?.profileUrl ?? null,
