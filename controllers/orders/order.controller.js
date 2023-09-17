@@ -9,7 +9,7 @@ const { redisClient } = require('../../configs/redis-client');
 
 const createOrder = async (req, res) => {
   try {
-    const { cartID } = req.query;
+    const { cartID, userID } = req.body;
     console.warn(cartID);
 
     // get order if already exists
@@ -150,9 +150,10 @@ const createOrder = async (req, res) => {
       };
 
       // send data to db
-      const { products, ...orderDataDB } = orderDataFrontend;
+      const { products, customer, ...orderDataDB } = orderDataFrontend;
 
       // add additional fields for soft deleting
+      orderDataDB.userID = userID;
       orderDataDB.isDeleted = false;
       orderDataDB.deletedAt = null;
 
