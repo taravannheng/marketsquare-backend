@@ -55,7 +55,6 @@ passport.use(
 
         // if the user is not found, create them in the database
         const newUser = new UserModel({
-          id: profile.id,
           provider: "google",
           username: profile.displayName,
           email: profile.emails[0].value,
