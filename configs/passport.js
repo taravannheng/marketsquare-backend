@@ -48,8 +48,6 @@ passport.use(
         const query = { id: profile.id };
         const user = await UserModel.findOne(query);
 
-        console.log(user);
-
         // if the user is found, return them
         if (user) {
           return done(null, user);
@@ -117,8 +115,7 @@ opts.secretOrKey = process.env.JWT_SECRET;
 passport.use(
   new JWTStrategy(opts, async (jwtPayload, done) => {
     try {
-      console.log('inside strategy');
-      const user = await UserModel.findOne({ id: jwtPayload.id });
+      const user = await UserModel.findOne({ _id: jwtPayload.id });
 
       if (!user) {
         return done(null, false, { message: "User not found" });
