@@ -45,7 +45,7 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         // search user in database using profile.id
-        const query = { id: profile.id };
+        const query = { email: profile.emails[0].value };
         const user = await UserModel.findOne(query);
 
         // if the user is found, return them
