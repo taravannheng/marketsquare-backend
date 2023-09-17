@@ -138,6 +138,9 @@ const getReviewsByProductID = async (req, res) => {
           };
         });
 
+        // filter out reviews with no username
+        modifiedReviews = modifiedReviews.filter((review) => review.username !== null);
+
         // set redis cache
         redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
   
