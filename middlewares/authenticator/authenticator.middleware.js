@@ -9,4 +9,13 @@ const checkAuth = (req, res, next) => {
   )(req, res, next);
 };
 
-module.exports = checkAuth;
+const isAdmin = (req, res, next) => {
+  // if user is not admin, return 403
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  return next();
+};
+
+module.exports = { checkAuth, isAdmin }
