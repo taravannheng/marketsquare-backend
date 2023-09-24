@@ -161,6 +161,91 @@ const getReviewsByProductID = async (req, res) => {
   }
 };
 
+const getReviewsByUserID = async (req, res) => {
+  try {
+    const user = req.user;
+    const userID = req.params.userID;
+    const cacheKey = `reviews-${userID}`;
+    let reviews;
+
+    const redisData = await redisClient.get(cacheKey);
+
+    // CACHE MISS
+    if (_.isEmpty(redisData)) {
+      // call to db
+      reviews = await ReviewModel.find({ userID });
+
+      if (_.isEmpty(reviews)) {
+        res.status(204).json({ message: "No reviews found..." });
+      }
+
+      // reviews found but deleted
+      let filteredReviews = reviews.filter((review) => review.isDeleted === false);
+      const reviewsDeleted = !_.isEmpty(reviews) && _.isEmpty(filteredReviews);
+      
+      if (reviewsDeleted) {
+        return res.status(204).json({ message: "No reviews found..." });
+      } 
+
+      // reviews found but no ownership
+      filteredReviews = filteredReviews.filter((review) => review.userID.toString() === user._id.toString());
+      const isNotOwner = !reviewsDeleted && _.isEmpty(filteredReviews);
+
+      if (isNotOwner) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      // reviews found and has ownership
+      const isOwner = !isNotOwner;
+      if (isOwner) {
+        // get user info for each review from database
+        const userIDs = filteredReviews.map((review) => review.userID);
+  
+        const users = await UserModel.find({ _id: { $in: userIDs } });
+  
+        // add username and profileUrls to each review
+        let modifiedReviews = filteredReviews;
+
+        modifiedReviews = modifiedReviews.map((review) => {
+          const matchedUser = users.find((user) => user._id.toString() === review.userID.toString());
+
+          const { _id, productID, userID, rating, comment, createdAt } = review;
+
+          return {
+            _id,
+            productID,
+            userID,
+            rating,
+            comment,
+            createdAt,
+            username: matchedUser?.username ?? null,
+            profileUrl: matchedUser?.profileUrl ?? null,
+          };
+        });
+
+        // filter out reviews with no username
+        modifiedReviews = modifiedReviews.filter((review) => review.username !== null);
+
+        // set redis cache
+        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
+  
+        res.status(200).json(modifiedReviews);
+      }
+    }
+
+    // CACHE HIT
+    if (!_.isEmpty(redisData)) {
+      // set reviews to redisData
+      reviews = JSON.parse(redisData);
+
+      return res.status(200).json(reviews);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const getMultipleReviews = async (req, res) => {
   try {
     const { ids } = req.query;
@@ -370,6 +455,7 @@ module.exports = {
   getMultipleReviews,
   getReview,
   getReviewsByProductID,
+  getReviewsByUserID,
   getReviews,
   updateReview,
   deleteReview,
