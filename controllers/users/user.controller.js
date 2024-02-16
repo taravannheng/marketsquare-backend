@@ -85,6 +85,46 @@ const getUser = async (req, res) => {
   }
 };
 
+const updateUsername = async (req, res) => {
+  try {
+    const email = req.params.email;
+    const { username } = req.body;
+
+    const user = await UserModel.findOne({ email });
+
+    // update username
+    if (!_.isEmpty(user)) {
+      await UserModel.updateOne
+      ({ email }, { $set: { username } });
+
+      res.status(200).json({ message: "username updated successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const updateEmail = async (req, res) => {
+  try {
+    const email = req.params.email;
+    const { newEmail } = req.body;
+
+    const user = await UserModel.findOne({ email });
+
+    // update email
+    if (!_.isEmpty(user)) {
+      await UserModel.updateOne
+      ({ email }, { $set: { email: newEmail } });
+
+      res.status(200).json({ message: "email updated successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const updatePassword = async (req, res) => {
   try {
     const email = req.params.email;
@@ -152,5 +192,7 @@ module.exports = {
   createUser,
   getUserByEmail,
   getUser,
+  updateUsername,
+  updateEmail,
   updatePassword,
 };
