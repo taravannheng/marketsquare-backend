@@ -21,6 +21,7 @@ router.post('/signin',
       username: req?.user?.username,
       email: req?.user?.email ?? null,
       profileUrl: req?.user?.profileUrl ?? null,
+      provider: req?.user?.provider ?? null,
     } });
   });
 
