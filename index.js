@@ -19,7 +19,7 @@ const reviewRoutes = require('./routes/reviews/reviews.routes');
 const wishlistRoutes = require('./routes/wishlists/wishlists.routes');
 const notFoundRoute = require('./routes/not-found/not-found.route');
 const loggingMiddleWare = require('./middlewares/logging/logging.middleware');
-const { connectToRedis } = require('./configs/redis-client');
+// const { connectToRedis } = require('./configs/redis-client');
 
 const app = express();
 
@@ -38,7 +38,7 @@ app.use(passport.initialize());
 
 // DB Connections
 connectDB();
-connectToRedis();
+// connectToRedis(); // Note: disable for now - might re-enable in the future
 
 // Routes
 app.use('/api', productRoutes);

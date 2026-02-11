@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 const RelatedProductModel = require('../../models/products/related-products.model');
-const { redisClient } = require('../../configs/redis-client');
+// const { redisClient } = require('../../configs/redis-client');
 
 const getRelatedProducts = async (req, res) => {
   try {
@@ -9,7 +9,8 @@ const getRelatedProducts = async (req, res) => {
     const productID = req.params.productID;
     const cacheKey = `related-${productID}`;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -17,13 +18,13 @@ const getRelatedProducts = async (req, res) => {
       relatedProducts = await RelatedProductModel.find({ products: productID });
 
       // set redis cache
-      if (!_.isEmpty(relatedProducts)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(relatedProducts)
-        );
-      }
+      // if (!_.isEmpty(relatedProducts)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(relatedProducts)
+      //   );
+      // }
     }
 
     // CACHE HIT

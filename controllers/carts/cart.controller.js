@@ -3,7 +3,7 @@ const _ = require("lodash");
 
 const CartModel = require("../../models/cart/cart.model");
 const { generateCartID, getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require('../../configs/redis-client');
+// const { redisClient } = require('../../configs/redis-client');
 
 const createCart = async (req, res) => {
   try {
@@ -97,7 +97,8 @@ const getCart = async (req, res) => {
     const cacheKey = `${cartID}`;
     let cart;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -105,13 +106,13 @@ const getCart = async (req, res) => {
       cart = await CartModel.find({ cartID: cartID });
 
       // set redis cache
-      if (!_.isEmpty(cart)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(cart)
-        );
-      }
+      // if (!_.isEmpty(cart)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(cart)
+      //   );
+      // }
     }
 
     // CACHE HIT
@@ -147,7 +148,8 @@ const getMultipleCarts = async (req, res) => {
     const cacheKey = `carts-${getFirstThreeChars(cartIDs)}`;
     let carts;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -155,13 +157,13 @@ const getMultipleCarts = async (req, res) => {
       carts = await CartModel.find({ cartID: { $in: cartIDs }});
 
       // set redis cache
-      if (!_.isEmpty(carts)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(carts)
-        );
-      }
+      // if (!_.isEmpty(carts)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(carts)
+      //   );
+      // }
     }
 
     // CACHE HIT
@@ -195,7 +197,8 @@ const getCarts = async (req, res) => {
     const cacheKey = 'carts';
     let carts;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -203,13 +206,13 @@ const getCarts = async (req, res) => {
       carts = await CartModel.find();
 
       // set redis cache
-      if (!_.isEmpty(carts)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(carts)
-        );
-      }
+      // if (!_.isEmpty(carts)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(carts)
+      //   );
+      // }
     }
 
     // CACHE HIT

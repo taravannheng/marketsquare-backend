@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const SlideshowModel = require("../../models/slideshows/slideshow.model");
 const { getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require("../../configs/redis-client");
+// const { redisClient } = require("../../configs/redis-client");
 
 const createSlideshow = async (req, res) => {
   try {
@@ -40,24 +40,11 @@ const getSlideshow = async (req, res) => {
     const cacheKey = `${slideshowID}`;
     let slideshow;
 
-    const redisData = await redisClient.get(cacheKey);
+    console.log("slideshow-id:", slideshowID);
+    
+    slideshow = await SlideshowModel.find({ _id: slideshowID });
 
-    // CACHE MISS
-    if (_.isEmpty(redisData)) {
-      // call to db
-      slideshow = await SlideshowModel.find({ _id: slideshowID });
-
-      // set redis cache
-      if (!_.isEmpty(slideshow)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(slideshow));
-      }
-    }
-
-    // CACHE HIT
-    if (!_.isEmpty(redisData)) {
-      // set slideshow to redisData
-      slideshow = JSON.parse(redisData);
-    }
+    console.log("slideshow response", slideshow);
 
     if (_.isEmpty(slideshow)) {
       res.status(204).json({ message: "No slideshow found..." });
@@ -88,7 +75,8 @@ const getMultipleSlideshows = async (req, res) => {
     const cacheKey = `slideshows-${getFirstThreeChars(slideshowIDs)}`;
     let slideshows;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -96,9 +84,9 @@ const getMultipleSlideshows = async (req, res) => {
       slideshows = await SlideshowModel.find({ _id: { $in: slideshowIDs } });
 
       // set redis cache
-      if (!_.isEmpty(slideshows)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(slideshows));
-      }
+      // if (!_.isEmpty(slideshows)) {
+      //   redisClient.setEx(cacheKey, 3600, JSON.stringify(slideshows));
+      // }
     }
 
     // CACHE HIT
@@ -134,7 +122,8 @@ const getSlideshows = async (req, res) => {
     const cacheKey = "slideshows";
     let slideshows;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -142,9 +131,9 @@ const getSlideshows = async (req, res) => {
       slideshows = await SlideshowModel.find();
 
       // set redis cache
-      if (!_.isEmpty(slideshows)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(slideshows));
-      }
+      // if (!_.isEmpty(slideshows)) {
+      //   redisClient.setEx(cacheKey, 3600, JSON.stringify(slideshows));
+      // }
     }
 
     // CACHE HIT

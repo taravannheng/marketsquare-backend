@@ -2,7 +2,7 @@ const _ = require("lodash");
 
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require("../../configs/redis-client");
+// const { redisClient } = require("../../configs/redis-client");
 
 const createProduct = async (req, res) => {
   try {
@@ -28,7 +28,8 @@ const getProduct = async (req, res) => {
     const cacheKey = `${productID}`;
     let product;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -36,9 +37,9 @@ const getProduct = async (req, res) => {
       product = await ProductModel.find({ _id: productID });
 
       // set redis cache
-      if (!_.isEmpty(product)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(product));
-      }
+      // if (!_.isEmpty(product)) {
+      //   redisClient.setEx(cacheKey, 3600, JSON.stringify(product));
+      // }
     }
 
     // CACHE HIT
@@ -76,7 +77,8 @@ const getMultipleProducts = async (req, res) => {
     const cacheKey = `products-${getFirstThreeChars(productIDs)}`;
     let products;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -84,9 +86,9 @@ const getMultipleProducts = async (req, res) => {
       products = await ProductModel.find({ _id: { $in: productIDs } });
 
       // set redis cache
-      if (!_.isEmpty(products)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
-      }
+      // if (!_.isEmpty(products)) {
+      //   redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
+      // }
     }
 
     // CACHE HIT
@@ -122,7 +124,8 @@ const getProducts = async (req, res) => {
     const cacheKey = "products";
     let products;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -130,9 +133,9 @@ const getProducts = async (req, res) => {
       products = await ProductModel.find();
 
       // set redis cache
-      if (!_.isEmpty(products)) {
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
-      }
+      // if (!_.isEmpty(products)) {
+      //   redisClient.setEx(cacheKey, 3600, JSON.stringify(products));
+      // }
     }
 
     // CACHE HIT
@@ -169,7 +172,8 @@ const searchProducts = async (req, res) => {
     const cacheKey = "products";
     let searchResults;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     if (_.isEmpty(redisData) && !_.isEmpty(searchTerm)) {
       searchResults = await ProductModel.find({

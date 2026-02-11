@@ -3,7 +3,7 @@ const _ = require("lodash");
 const WishlistModel = require("../../models/wishlists/wishlists.model");
 const UserModel = require("../../models/users/user.model");
 const { getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require("../../configs/redis-client");
+// const { redisClient } = require("../../configs/redis-client");
 
 const createWishlist = async (req, res) => {
   try {

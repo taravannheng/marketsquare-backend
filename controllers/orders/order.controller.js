@@ -5,7 +5,7 @@ const CartModel = require("../../models/cart/cart.model");
 const OrderModel = require("../../models/order/order.model");
 const ProductModel = require("../../models/products/products.model");
 const { getFirstThreeChars, generateOrderID } = require("../../utils/helpers");
-const { redisClient } = require('../../configs/redis-client');
+// const { redisClient } = require('../../configs/redis-client');
 
 const createOrder = async (req, res) => {
   try {
@@ -176,7 +176,8 @@ const getMultipleOrders = async (req, res) => {
     const cacheKey = `orders-${getFirstThreeChars(orderIDs)}`;
     let orders;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -184,13 +185,13 @@ const getMultipleOrders = async (req, res) => {
       orders = await OrderModel.find({ orderID: { $in: orderIDs }});
 
       // set redis cache
-      if (!_.isEmpty(orders)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(orders)
-        );
-      }
+      // if (!_.isEmpty(orders)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(orders)
+      //   );
+      // }
     }
 
     // CACHE HIT
@@ -225,7 +226,8 @@ const getOrders = async (req, res) => {
     const cacheKey = 'orders';
     let orders;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -233,13 +235,13 @@ const getOrders = async (req, res) => {
       orders = await OrderModel.find();
 
       // set redis cache
-      if (!_.isEmpty(orders)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(orders)
-        );
-      }
+      // if (!_.isEmpty(orders)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(orders)
+      //   );
+      // }
     }
 
     // CACHE HIT
@@ -301,7 +303,8 @@ const getOrder = async (req, res) => {
     const cacheKey = `${orderID}`;
     let order;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -309,13 +312,13 @@ const getOrder = async (req, res) => {
       order = await OrderModel.find({ orderID: orderID });
 
       // set redis cache
-      if (!_.isEmpty(order)) {
-        redisClient.setEx(
-          cacheKey,
-          3600,
-          JSON.stringify(order)
-        );
-      }
+      // if (!_.isEmpty(order)) {
+      //   redisClient.setEx(
+      //     cacheKey,
+      //     3600,
+      //     JSON.stringify(order)
+      //   );
+      // }
     }
 
     // CACHE HIT

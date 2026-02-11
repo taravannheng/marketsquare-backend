@@ -3,7 +3,7 @@ const _ = require("lodash");
 const ReviewModel = require("../../models/reviews/reviews.model");
 const UserModel = require("../../models/users/user.model");
 const { getFirstThreeChars } = require("../../utils/helpers");
-const { redisClient } = require("../../configs/redis-client");
+// const { redisClient } = require("../../configs/redis-client");
 
 const createReview = async (req, res) => {
   try {
@@ -34,7 +34,8 @@ const getReview = async (req, res) => {
     const cacheKey = `review-${reviewID}`;
     let review;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -69,7 +70,7 @@ const getReview = async (req, res) => {
         };
 
         // set redis cache
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReview));
+        // redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReview));
 
         res.status(200).json(modifiedReview);
       }
@@ -94,7 +95,8 @@ const getReviewsByProductID = async (req, res) => {
     const cacheKey = `reviews-${productID}`;
     let reviews;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -142,7 +144,7 @@ const getReviewsByProductID = async (req, res) => {
         modifiedReviews = modifiedReviews.filter((review) => review.username !== null);
 
         // set redis cache
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
+        // redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
   
         res.status(200).json(modifiedReviews);
       }
@@ -168,7 +170,8 @@ const getReviewsByUserID = async (req, res) => {
     const cacheKey = `reviews-${userID}`;
     let reviews;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -227,7 +230,7 @@ const getReviewsByUserID = async (req, res) => {
         modifiedReviews = modifiedReviews.filter((review) => review.username !== null);
 
         // set redis cache
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
+        // redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
   
         res.status(200).json(modifiedReviews);
       }
@@ -253,7 +256,8 @@ const getMultipleReviews = async (req, res) => {
     const cacheKey = `reviews-${getFirstThreeChars(reviewIDs)}`;
     let reviews;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -298,7 +302,7 @@ const getMultipleReviews = async (req, res) => {
         });
 
         // set redis cache
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
+        // redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
   
         res.status(200).json(modifiedReviews);
       }
@@ -322,7 +326,8 @@ const getReviews = async (req, res) => {
     const cacheKey = "reviews";
     let reviews;
 
-    const redisData = await redisClient.get(cacheKey);
+    // const redisData = await redisClient.get(cacheKey);
+    const redisData = null;
 
     // CACHE MISS
     if (_.isEmpty(redisData)) {
@@ -367,7 +372,7 @@ const getReviews = async (req, res) => {
         });
 
         // set redis cache
-        redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
+        // redisClient.setEx(cacheKey, 3600, JSON.stringify(modifiedReviews));
   
         res.status(200).json(modifiedReviews);
       }
